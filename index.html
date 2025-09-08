@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventrix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+
+    :root{
+      --bg:#06080a;
+      --panel:#0b1220;
+      --accent:#00a3ff;
+      --accent-2:#006bb3;
+      --muted:#98a0b3;
+      --bubble-user:#063b5b;
+      --bubble-bot:#0f2330;
+      --glass: rgba(255,255,255,0.02);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#030305 0%, #070a0f 100%);color:#e6eef8}
+
+/* Floating Chat Button */
+.chat-launcher{
+position:fixed;right:24px;bottom:24px;z-index:9999;
+display:flex;align-items:center;gap:12px;
+}
+
+
+.chat-btn{
+width:64px;height:64px;border-radius:50%;
+background:linear-gradient(135deg,var(--accent),var(--accent-2));
+box-shadow:0 8px 30px rgba(0,163,255,0.15), inset 0 -6px 18px rgba(0,0,0,0.25);
+display:grid;place-items:center;color:white;border:none;cursor:pointer;outline:none;
+transition:transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .2s;
+}
+.chat-btn:active{transform:scale(.98)}
+
+
+.chat-btn .logo{
+font-weight:700;font-size:18px;letter-spacing:.4px;
+}
+
+
+/* Small label next to button */
+.chat-label{
+background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+border-radius:12px;padding:10px 14px;font-size:14px;color:var(--muted);
+box-shadow:0 6px 20px rgba(2,6,23,0.6);backdrop-filter: blur(6px);
+transform-origin:right center;transition:opacity .18s, transform .18s;
+}
+
+
+/* Chat panel (hidden by default) */
+.chat-panel{
+position:fixed;right:24px;bottom:100px;width:380px;max-height:70vh;min-height:400px;border-radius:14px;overflow:hidden;
+background:linear-gradient(180deg,var(--panel), #07101a);
+box-shadow:0 20px 70px rgba(0,0,0,0.6);
+transform:translateY(24px) scale(.98);opacity:0;pointer-events:none;transition:all .34s cubic-bezier(.2,.9,.3,1);
+display:flex;flex-direction:column;
+}
+
+
+/* When open */
+.chat-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+.chat-launcher.open .chat-label{opacity:0;transform:translateX(12px) scale(.96)}
+
+
+.chat-header{
+padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.03);
+background:linear-gradient(180deg, rgba(235, 219, 219, 0.15), rgba(66, 54, 54, 0.958));
+}
+.chat-title{font-weight:600;font-size:15px}
+.chat-sub{font-size:12px;color:var(--muted)}
+
+
+.chat-body {
+      flex: 1; /* Takes all remaining space */
+  overflow-y: auto; /* Scroll when messages overflow */
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+   padding: 90px 10px 10px;/* adds space above the first message */
+  overflow-y: auto;
+  height: calc(100% - 60px); /* leave space for input */
+  overflow-y: auto;          /* scroll messages */
+  box-sizing: border-box;
+}
+
+/* Common message styling */
+.msg {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+/* Bot messages (left side) */
+.msg.bot {
+  background: #1f2937;
+  color: #f3f4f6;
+  align-self: flex-start;
+  border-bottom-left-radius: 6px;
+}
+
+/* User messages (right side) */
+.msg.user {
+  background: #2563eb;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 6px;
+}
+
+
+
+
+.chat-footer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,0.02);background:var(--glass)}
+.chat-input{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:inherit;outline:none}
+.send-btn{min-width:56px;padding:8px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;font-weight:600;cursor:pointer}
+
+
+/* small responsive tweaks */
+@media(max-width:420px){
+.chat-panel{right:12px;left:12px;width:auto;border-radius:12px}
+.chat-launcher{right:12px;bottom:16px}
+}
+.typing{height:8px;width:36px;background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));border-radius:8px;display:inline-block}
+    
+.footer {
+    background-color: #0a0a0f;
+    color: #ffffff;
+    padding: 40px 0;
+    font-family: 'Arial', sans-serif;
+     margin-top: auto;
+}
+
+.footer .container1 {
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+    
+}
+
+.footer .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.footer-col {
+    width: 23%;
+    margin-bottom: 20px;
+}
+
+.footer-col h4 {
+    font-size: 18px;
+    color: #00aaff;
+    margin-bottom: 15px;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-col ul li {
+    margin-bottom: 10px;
+}
+
+.footer-col ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-col ul li a:hover {
+    color: #00aaff;
+}
+
+.footer .social-links {
+    display: flex;
+}
+
+.footer .social-links a {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 20px;
+    color: #ffffff;
+    transition: color 0.3s;
+}
+
+.footer .social-links a:hover {
+    color: #00aaff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .footer .row {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .footer-col {
+        width: 100%;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div id="loader">
+  <div class="spinner"></div>
+  Loading...
+</div>
+    <div id="content">
+    <div class="container">
+      <header>
+    <div class="head-left">
+        <img src="images.png" alt="logo">
+        <button>Events</button>
+    </div>
+
+    <div class="head-right">
+        <form id="artistSearchForm" class="nav-search">
+            <input type="text" id="artistSearchInput" placeholder="Search artist...">
+        </form>
+
+        <p><a href="#">Book</a></p>
+        <p><a href="#">About</a></p>
+        <p><a href="categories.html">Categories</a></p>
+        <p><a href="#">Contact</a></p>
+        <p><a href="#prizeCardsUniqueWrapper">Rewards</a></p>
+        <p><a href="login.html">LOGIN</a></p>
+    </div>
+</header>
+
+
+        <section class="hero-section autoblur">
+            <div class="hero-vid">
+                <video loop autoplay muted plays-inline class="hero-video">
+                    <source src="events.mp4" type="video/mp4">
+                </video>
+                <div class="hero-info">
+                    <h1>Gather</h1>
+                    <p>One-stop solution to book, organize, and manage events with ease</p>
+                    <button>Get Started</button>
+                </div>
+                <h1 class="event-text">Grid</h1>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <p>Welcome to Eventrix</p>
+            <div class="autoblur">
+                <h1>A smart way to plan, book, and manage your events online</h1>
+            </div>
+            <!-- <div class="image-box autotakefull"> -->
+                <!-- <img src="pexels-teddy-2263436.jpg" alt="about-image">
+            </div>
+            <h4>About Eventrix</h4>
+            <h5>
+                Eventrix is an all-in-one event management platform designed to simplify the process of planning, booking, and managing events.
+            </h5>
+        </section> -->
+
+        <section id="trending-events">
+            <h2 class="trending-heading">TRENDING NOW</h2>
+            <div class="cards-row">
+
+                <article class="card2" 
+                data-description="A hilarious night of stand-up with top comedians." 
+         data-price="₹200"
+         data-title="Standup Comedy"
+         data-subtitle="Top artists live"
+         data-video="standup.mp4">
+                    <video src="standup.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Standup Comedy</p>
+                        <p class="subtitle">Top artists live</p>
+                        <h3>₹200</h3>
+                    </div>
+                </article>
+
+                <article class="card2" data-description="Experience electrifying performances by top artists in an unforgettable night of music." 
+         data-price="₹500"
+         data-title="Live Concert"
+         data-subtitle="Top artists live"
+         data-video="concert.mp4">
+                    <video src="concertt.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Live Concert</p>
+                        <p class="subtitle">Popular band</p>
+                        <h3>₹500</h3>
+                    </div>
+                </article>
+
+                <article class="card2" data-description="Discover stunning modern artworks and creative expressions from emerging and renowned artists" 
+         data-price="₹150"
+         data-title="Art Exhibition"
+         data-subtitle="Modern art"
+         data-video="artexh.mp4" >
+                    <video src="artexh.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Art Exhibition</p>
+                        <p class="subtitle">Modern art</p>
+                        <h3>₹150</h3>
+                    </div>
+                </article>
+
+                <article class="card2"  data-description="Taste a world of gourmet delights and street flavors all in one vibrant celebration." 
+         data-price="₹300"
+         data-title="Food Festival"
+         data-subtitle="Gourmet delights"
+         data-video="foodfestival.mp4" >
+                    <video src="foodfestival.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Food Festival</p>
+                        <p class="subtitle">Gourmet delights</p>
+                        <h3>₹300</h3>
+                    </div>
+                </article>
+
+                <article class="card2"  data-description="Catch the thrill of live action and cheer for your favorite teams on the big stage" 
+         data-price="₹400"
+         data-title="Sports Event"
+         data-subtitle="Live action"
+         data-video="sports.mp4">
+                    <video src="sports.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Sports Event</p>
+                        <p class="subtitle">Live action</p>
+                        <h3>₹400</h3>
+                    </div>
+                </article>
+
+                <article class="card2"  data-description="Celebrate the magic of cinema with exclusive indie films and award-winning stories." 
+         data-price="₹250"
+         data-title="Film Festival"
+         data-subtitle="Indie movies"
+         data-video="filmfest.mp4">
+                    <video src="filmfestival.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Film Festival</p>
+                        <p class="subtitle">Indie movies</p>
+                        <h3>₹250</h3>
+                    </div>
+                </article>
+
+                <!-- <article class="card2" data-description="Immerse yourself in powerful performances and timeless storytelling on stage" 
+         data-price="₹350"
+         data-title="Theater Play"
+         data-subtitle="Drama night"
+         data-video="play.mp4">
+                    <video src="play.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Theater Play</p>
+                        <p class="subtitle">Drama night</p>
+                        <h3>₹350</h3>
+                    </div>
+                </article> -->
+
+                <article class="card2" 
+          data-description="Feel the rhythm, energy, and vibes of live music under the open sky." 
+         data-price="₹350"
+         data-title="Music Festival"
+         data-subtitle="Outdoor vibes"
+         data-video="musicfestival.mp4">
+                    <video src="musicfestival.mp4" autoplay loop muted playsinline></video>
+                    <div class="card-content">
+                        <p class="title">Music Festival</p>
+                        <p class="subtitle">Outdoor vibes</p>
+                        <h3>₹600</h3>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+<!-- 
+       prize cards -->
+     <!-- <div id="prizeCardsUniqueWrapper" aria-label="Pick a card prize section">
+  <h2>Pick a Card</h2>
+  <div id="prizeCardsUniqueRow" aria-label="Prize cards selection">
+    <div class="prize-card" tabindex="0" role="button" aria-pressed="false" aria-label="Card 1">
+      <div class="prize-card-face prize-front" aria-hidden="false">1</div>
+      <div class="prize-card-face prize-back" aria-hidden="true">
+        <div class="prize-title">Prize!</div>
+        <div class="prize-desc">20% Off Movie Tickets</div>
+      </div>
+    </div>
+    <div class="prize-card" tabindex="0" role="button" aria-pressed="false" aria-label="Card 2">
+      <div class="prize-card-face prize-front" aria-hidden="false">2</div>
+      <div class="prize-card-face prize-back" aria-hidden="true">
+        <div class="prize-title">Prize!</div>
+        <div class="prize-desc">Free Snack Upgrade</div>
+      </div>
+    </div>
+    <div class="prize-card" tabindex="0" role="button" aria-pressed="false" aria-label="Card 3">
+      <div class="prize-card-face prize-front" aria-hidden="false">3</div>
+      <div class="prize-card-face prize-back" aria-hidden="true">
+        <div class="prize-title">Prize!</div>
+        <div class="prize-desc">Buy 1 Get 1 Free Tickets</div>
+      </div>
+    </div>
+  </div>
+</div> --> 
+
+      <section class="trending-events">
+  <h2 class="trending-heading">MOVIES</h2>
+
+  <div class="cards-slider">
+    <div class="cards-row">
+
+      <article class="card2" data-description="A mind-bending sci-fi thriller that blurs the line between dreams and reality." 
+         data-price="₹200"
+         data-title="Inception"
+         data-subtitle="Sci-Fi Thriller"
+         data-video="inception.mp4">
+        <video src="inception.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Inception</p>
+          <p class="subtitle">Sci-Fi Thriller</p>
+          <h3>₹200</h3>
+        </div>
+      </article>
+
+      <!-- <article class="card2" data-description="The epic finale where Earth’s mightiest heroes unite for the ultimate battle." 
+         data-price="₹500"
+         data-title="Avengers: Endgame"
+         data-subtitle="Superhero Action"
+         data-video="avengers.mp4">
+        <video src="avengers.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Avengers: Endgame</p>
+          <p class="subtitle">Superhero Action</p>
+          <h3>₹500</h3>
+        </div>
+      </article> -->
+
+      <article class="card2" data-description="A breathtaking space odyssey exploring love, survival, and the fate of humanity." 
+         data-price="₹150"
+         data-title="Interstellar"
+         data-subtitle="Space Adventure"
+         data-video="movie3.mp4">
+        <video src="insteller.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Interstellar</p>
+          <p class="subtitle">Space Adventure</p>
+          <h3>₹150</h3>
+        </div>
+      </article>
+
+      <article class="card2" data-description="A gritty crime drama where Batman faces his ultimate test against the Joker" 
+         data-price="₹300"
+         data-title="The Dark Knight"
+         data-subtitle="Crime Drama"
+         data-video="darkknight.mp4">
+        <video src="darknight.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">The Dark Knight</p>
+          <p class="subtitle">Crime Drama</p>
+          <h3>₹300</h3>
+        </div>
+      </article>
+
+      <article class="card2" data-description="Step into a thrilling adventure where dinosaurs rule the ultimate theme park." 
+         data-price="₹400"
+         data-title="Jurassic World"
+         data-subtitle="Dinosaur Action"
+         data-video="jurassic.mp4">
+        <video src="jurassic.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Jurassic World</p>
+          <p class="subtitle">Dinosaur Action</p>
+          <h3>₹400</h3>
+        </div>
+      </article>
+
+      <article class="card2" data-description="A gripping tale of class divide that blends dark humor with shocking twists." 
+         data-price="₹350"
+         data-title="Parasite"
+         data-subtitle="Oscar Winner"
+         data-video="parasite.mp4">
+        <video src="parasite.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Parasite</p>
+          <p class="subtitle">Oscar Winner</p>
+          <h3>₹250</h3>
+        </div>
+      </article>
+
+      <!-- <article class="card2" data-description="Feel the rhythm, energy, and vibes of live music under the open sky." 
+         data-price="₹350"
+         data-title="Shakespeare in Love"
+         data-subtitle="Romantic Epic"
+         data-video="romantic.mp4">
+        <video src="romantic.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Shakespeare in Love</p>
+          <p class="subtitle">Romantic Epic</p>
+          <h3>₹350</h3>
+        </div>
+      </article> -->
+
+      <article class="card2"data-description="Feel the rhythm, energy, and vibes of live music under the open sky." 
+         data-price="₹600"
+         data-title="Spider-Man: No Way Home"
+         data-subtitle="Marvel Multiverse"
+         data-video="spiderman.mp4">
+        <video src="spiderman.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Spider-Man: No Way Home</p>
+          <p class="subtitle">Marvel Multiverse</p>
+          <h3>₹600</h3>
+        </div>
+      </article>
+
+
+
+        <article class="card2" data-description="A mind-bending sci-fi thriller that blurs the line between dreams and reality." 
+         data-price="₹200"
+         data-title="Inception"
+         data-subtitle="Sci-Fi Thriller"
+         data-video="inception.mp4">
+        <video src="inception.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Inception</p>
+          <p class="subtitle">Sci-Fi Thriller</p>
+          <h3>₹200</h3>
+        </div>
+      </article>
+
+      <!-- <article class="card2" data-description="The epic finale where Earth’s mightiest heroes unite for the ultimate battle." 
+         data-price="₹500"
+         data-title="Avengers: Endgame"
+         data-subtitle="Superhero Action"
+         data-video="avengers.mp4">
+        <video src="avengers.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Avengers: Endgame</p>
+          <p class="subtitle">Superhero Action</p>
+          <h3>₹500</h3>
+        </div>
+      </article> -->
+
+      <article class="card2" data-description="A breathtaking space odyssey exploring love, survival, and the fate of humanity." 
+         data-price="₹150"
+         data-title="Interstellar"
+         data-subtitle="Space Adventure"
+         data-video="insteller.mp4">
+        <video src="insteller.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Interstellar</p>
+          <p class="subtitle">Space Adventure</p>
+          <h3>₹150</h3>
+        </div>
+      </article>
+
+       <article class="card2" data-description="A gritty crime drama where Batman faces his ultimate test against the Joker" 
+         data-price="₹300"
+         data-title="The Dark Knight"
+         data-subtitle="Crime Drama"
+         data-video="darkknight.mp4">
+        <video src="darknight.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">The Dark Knight</p>
+          <p class="subtitle">Crime Drama</p>
+          <h3>₹300</h3>
+        </div>
+      </article>
+
+      <article class="card2" data-description="Step into a thrilling adventure where dinosaurs rule the ultimate theme park." 
+         data-price="₹400"
+         data-title="Jurassic World"
+         data-subtitle="Dinosaur Action"
+         data-video="jurassic.mp4">
+        <video src="jurassic.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Jurassic World</p>
+          <p class="subtitle">Dinosaur Action</p>
+          <h3>₹400</h3>
+        </div>
+      </article>
+
+      <article class="card2" data-description="A gripping tale of class divide that blends dark humor with shocking twists." 
+         data-price="₹350"
+         data-title="Parasite"
+         data-subtitle="Oscar Winner"
+         data-video="parasite.mp4">
+        <video src="parasite.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Parasite</p>
+          <p class="subtitle">Oscar Winner</p>
+          <h3>₹250</h3>
+        </div>
+      </article>
+
+      <!-- <article class="card2" data-description="Feel the rhythm, energy, and vibes of live music under the open sky." 
+         data-price="₹350"
+         data-title="Shakespeare in Love"
+         data-subtitle="Romantic Epic"
+         data-video="romantic.mp4">
+        <video src="romantic.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Shakespeare in Love</p>
+          <p class="subtitle">Romantic Epic</p>
+          <h3>₹350</h3>
+        </div>
+      </article> -->
+
+      <article class="card2"data-description="Feel the rhythm, energy, and vibes of live music under the open sky." 
+         data-price="₹600"
+         data-title="Spider-Man: No Way Home"
+         data-subtitle="Marvel Multiverse"
+         data-video="spiderman.mp4">
+        <video src="spiderman.mp4" autoplay loop muted playsinline></video>
+        <div class="card-content">
+          <p class="title">Spider-Man: No Way Home</p>
+          <p class="subtitle">Marvel Multiverse</p>
+          <h3>₹600</h3>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- modals -->
+ <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <video id="modalVideo" autoplay loop muted playsinline></video>
+      <h2 id="modalTitle"></h2>
+      <p id="modalSubtitle"></p>
+      <h3 id="modalPrice"></h3>
+      <p id="modalDescription"></p>
+      <button id="bookNowBtn">Book Now</button>
+    </div>
+  </div>
+<!-- artists -->
+<section id="popular-artists">
+  <div class="container">
+    <h2>Popular Artists</h2>
+    <div class="artists-row">
+      <div class="artist-card" tabindex="0">
+        <div class="artist-bg-circle"></div>
+        <div class="artist-image" style="background-image: url(taylorswift.jpeg);"></div>
+        <div class="artist-name">Taylor Swift</div>
+      </div>
+      <div class="artist-card" tabindex="0">
+        <div class="artist-bg-circle"></div>
+        <div class="artist-image" style="background-image: url(drake.jpeg);"></div>
+        <div class="artist-name">Drake</div>
+      </div>
+      <div class="artist-card" tabindex="0">
+        <div class="artist-bg-circle"></div>
+        <div class="artist-image" style="background-image: url(ladygaga.jpeg);"></div>
+        <div class="artist-name">Lady Gaga</div>
+      </div>
+      <div class="artist-card" tabindex="0">
+        <div class="artist-bg-circle"></div>
+        <div class="artist-image" style="background-image: url(Beyonce.jpeg);"></div>
+        <div class="artist-name">Beyonce</div>
+      </div>
+      <div class="artist-card" tabindex="0">
+        <div class="artist-bg-circle"></div>
+        <div class="artist-image" style="background-image: url(shakira.jpeg);"></div>
+        <div class="artist-name">Shakira</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="chat-launcher" id="launcher">
+    <div class="chat-label">Chat with us</div>
+    <button class="chat-btn" id="toggle">
+      <div class="logo">💬</div>
+    </button>
+  </div>
+
+  <aside class="chat-panel" id="panel" aria-hidden="true">
+    <header class="chat-header">
+      <div>
+        <div class="chat-title">ChatBot</div>
+        <div class="chat-sub">Quick support</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button id="minimize" title="Close" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px">✕</button>
+      </div>
+    </header>
+
+    <main class="chat-body" id="messages" role="log" aria-live="polite">
+      <div class="msg bot">Hi! I'm ChatBot. Ask me anything</div>
+    </main>
+
+    <footer class="chat-footer">
+      <input class="chat-input" id="input" placeholder="Type a message and press Enter..." autocomplete="off" />
+      <button class="send-btn" id="send">Send</button>
+    </footer>
+  </aside>
+        <section class="info-section">
+            <div class="info-card">
+                <div class="card autodisplay">
+                    <h1>SplitWise</h1>
+                    <p>Travel with friends, enjoy every moment, and let us handle the tricky part — splitting the expenses fairly, so nobody feels left out.</p>
+                    <video src="splitwisee.mp4" autoplay loop muted plays-inline></video>
+                    <button>Coming Soon</button>
+                </div>
+                <div class="card autodisplay">
+                    <h1>Concerts</h1>
+                    <p>Feel the music live, book your spot now.</p>
+                    <video src="concert.mp4" autoplay loop muted plays-inline></video>
+                </div>
+                <div class="card autodisplay">
+                    <h1>Movies</h1>
+                    <p>Big screen, big moments — your seat awaits.</p>
+                    <video src="imax.mp4" autoplay loop muted plays-inline></video>
+                </div>
+                <div class="card autodisplay">
+                    <h1>Standups</h1>
+                    <p>Your dose of comedy, booked in seconds.</p>
+                    <video src="standup.mp4" autoplay loop muted plays-inline></video>
+                </div>
+                <div class="card autodisplay">
+                    <h1>Sports</h1>
+                    <p>Game on — grab your tickets today.</p>
+                    <video src="sports.mp4" autoplay loop muted plays-inline></video>
+                </div>
+                <div class="card autodisplay">
+                    <h1>Festivals</h1>
+                    <p>Where culture meets connection — reserve your seat.</p>
+                    <video src="events.mp4" autoplay loop muted plays-inline></video>
+                </div>
+            </div>
+        </section>
+    </div>
+ <footer class="footer">
+    <div class="container1">
+      <div class="row">
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About us</a></li>
+            <li><a href="#">Privacy policy</a></li>
+            <li><a href="#">Terms & Conditions</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help Centre</h4>
+          <ul>
+            <li><a href="#" class="open-modal">FAQs</a></li>
+            <li><a href="#">Status</a></li>
+            <li><a href="#">Payment options</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Our Services</h4>
+          <ul>
+             <li><a href="#">Event Planning</a></li>
+             <li><a href="#">Venue Booking</a></li>
+             <li><a href="#">Guest Management</a></li>
+            <li><a href="#">On-site Event Support</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Follow us</h4>
+          <div class="social-links">
+            <a href="#"><i class="fa-brands fa-square-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            <a href="#"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  </div>
+    <script src="app.js"></script>
+</body>
+</html>
