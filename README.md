@@ -13,13 +13,18 @@ Responsive Design – Works smoothly across desktop and mobile browsers.
 
 Interactive Interface – Dynamic features using JavaScript for better user experience.
 
-🎨 CLEAN, USER-FRIENDLY INTERFACE
 
 # 🛠️ TECHNOLOGIES USED
-Layer     	Technology
-Frontend	HTML5, CSS3, JavaScript (ES6+)
-Backend  	Not used (static web pages)
-Database	Not integrated yet
+Layer           	Technology
+
+
+Frontend	        HTML5, CSS3, JavaScript (ES6+)
+
+
+Backend  	        Not used (static web pages)
+
+
+Database	        Not integrated yet
 
 # 📸 SCREENSHOTS
 
