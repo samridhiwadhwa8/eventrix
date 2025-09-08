@@ -77,5 +77,3 @@ For questions or suggestions:
 
 📧 samridhi1657.becse24@chitkara.edu.in
 
-
-📧 samridhi1657.becse24@chitkara.edu.in
