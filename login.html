@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventix - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url('https://images.unsplash.com/photo-1531297484001-80022131f5a1') no-repeat center center/cover;
+    }
+
+    .container {
+      width: 900px;
+      height: 550px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 20px;
+      display: flex;
+      overflow: hidden;
+      box-shadow: 0px 0px 25px rgba(255, 255, 255, 0.1);
+    }
+
+    .left {
+      flex: 1;
+      background: url('https://images.unsplash.com/photo-1604079625653-7c3b246b9a79') no-repeat center center/cover;
+    }
+
+    .right {
+      flex: 1;
+      padding: 40px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .auth-navbar {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 14px;
+    }
+
+    .auth-navbar a {
+      margin-left: 15px;
+      color: #fff;
+      text-decoration: none;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .auth-navbar a:hover {
+      color: #ff4d6d;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    p {
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4d6d;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: #ff2e4d;
+    }
+
+    .social-login {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .social-login button {
+      flex: 1;
+      margin: 5px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .social-login img {
+      width: 20px;
+      margin-right: 8px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+
+    .footer a {
+      color: #ff4d6d;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left"></div>
+    <div class="right">
+      <!-- Auth links -->
+      <div class="auth-navbar">
+        <a id="signin-link">Sign In</a> <a id="register-link"></a>
+      </div>
+
+      <h2>Welcome Back to Eventix!</h2>
+      <p>Sign in to continue managing your events</p>
+
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Enter Email" required>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <button type="submit" class="btn">Sign In</button>
+      </form>
+
+      <p style="margin-top:15px;">Or continue with</p>
+
+      <div class="social-login">
+        <button id="google-btn"><img src="https://img.icons8.com/color/48/google-logo.png">Google</button>
+        <button id="insta-btn"><img src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png">Instagram</button>
+        <button id="apple-btn"><img src="https://img.icons8.com/ios-filled/50/mac-os.png">Apple</button>
+        <button id="facebook-btn"><img src="https://img.icons8.com/color/48/facebook-new.png">Facebook</button>
+      </div>
+
+      <div class="footer">
+        Don’t have an account? <a id="create-link">Create Account</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Handle login
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      let email = document.getElementById("email").value;
+      let pass = document.getElementById("password").value;
+
+      if(email && pass){
+        alert("✅ Signed in successfully as " + email);
+        window.location.href = "dashboard.html"; // redirect after login
+      } else {
+        alert("❌ Please enter email and password!");
+      }
+    });
+
+    // Navbar links
+    document.getElementById("signin-link").onclick = function(){ 
+      alert("You are already on the Sign In page."); 
+    };
+    document.getElementById("register-link").onclick = function(){ 
+      window.location.href = "rr.html"; 
+    };
+    document.getElementById("create-link").onclick = function(){ 
+      window.location.href = "rr.html"; 
+    };
+
+    // Social login buttons
+    document.getElementById("google-btn").onclick = function(){
+      window.open("https://accounts.google.com/signin", "_blank");
+    };
+    document.getElementById("insta-btn").onclick = function(){
+      window.open("https://www.instagram.com/accounts/login/", "_blank");
+    };
+    document.getElementById("apple-btn").onclick = function(){
+      window.open("https://appleid.apple.com/sign-in", "_blank");
+    };
+    document.getElementById("facebook-btn").onclick = function(){
+      window.open("https://www.facebook.com/login", "_blank");
+    };
+  </script>
+</body>
+</html>
